@@ -1,6 +1,6 @@
 package com.fintech.prototype.gateway.dto;
 
-public class ConsultRequestDTO extends BaseRequest {
+public class ConsultRequestDTO extends BaseConsultRequest {
 
     private String agency;
 

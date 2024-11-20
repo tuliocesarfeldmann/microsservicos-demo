@@ -2,8 +2,8 @@ package com.fintech.prototype.gateway.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fintech.prototype.gateway.dto.ConsultRequestDTO;
-import com.fintech.prototype.gateway.dto.ConsultResponseDTO;
+import com.fintech.prototype.gateway.dto.CashWithdrawalRequestDTO;
+import com.fintech.prototype.gateway.dto.CashWithdrawalResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,7 @@ import static java.util.Objects.isNull;
 
 @Service
 @Slf4j
-public class ConsultService {
+public class CashWithdrawalService {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -24,21 +24,21 @@ public class ConsultService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private final String REPLY_EXCHANGE = "reply-consult-rabbit";
+    private final String REPLY_EXCHANGE = "reply-cash-withdrawal-rabbit";
 
-    private final String REPLY_QUEUE = "reply-consult-rabbit";
+    private final String REPLY_QUEUE = "reply-cash-withdrawal-rabbit";
 
     private final Integer TTL = 20000;
 
-    public ConsultResponseDTO consultSend(ConsultRequestDTO consult) throws JsonProcessingException {
+    public CashWithdrawalResponseDTO cashWithdrawalSend(CashWithdrawalRequestDTO cashWithdrawal, String identifier) throws JsonProcessingException {
 
-        log.info("Sending consult... | identifier: {}", consult.getIdentifier());
+        log.info("Sending cash withdrawal... | identifier: {}", identifier);
 
-        String payload = objectMapper.writeValueAsString(consult);
+        String payload = objectMapper.writeValueAsString(cashWithdrawal);
 
-        sendMessage(payload, consult.getIdentifier());
+        sendMessage(payload, identifier);
 
-        String replyQueue = REPLY_EXCHANGE + "-" + consult.getIdentifier();
+        String replyQueue = REPLY_EXCHANGE + "-" + identifier;
 
         Object response = rabbitTemplate.receiveAndConvert(
                 replyQueue,
@@ -49,7 +49,7 @@ public class ConsultService {
             throw new RuntimeException("Timeout waiting for response on queue " + replyQueue);
         } else {
             String jsonResponse = response.toString();
-            return objectMapper.readValue(jsonResponse, ConsultResponseDTO.class);
+            return objectMapper.readValue(jsonResponse, CashWithdrawalResponseDTO.class);
         }
     }
 
@@ -61,7 +61,7 @@ public class ConsultService {
         headers.put("IDENTIFIER", identifier);
 
         rabbitTemplate.convertAndSend(
-                "exchange-consult-rabbit",
+                "exchange-cash-withdrawal-rabbit",
                 "",
                 payload, message -> {
                     Map<String, Object> headerMap = message.getMessageProperties().getHeaders();
