@@ -12,7 +12,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="saque" options="-parameters" />
+      <module name="saque" options="" />
     </option>
   </component>
 </project>

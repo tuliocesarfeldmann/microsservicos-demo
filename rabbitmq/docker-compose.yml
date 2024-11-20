@@ -1,0 +1,7 @@
+services:
+  rabbitmq-mensageria:
+    image: rabbitmq:management
+    container_name: rabbitmq-mensageria
+    ports:
+      - "15672:15672"
+      - "5672:5672"
