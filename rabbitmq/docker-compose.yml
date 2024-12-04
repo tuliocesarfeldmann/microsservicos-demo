@@ -1,7 +1,9 @@
 services:
   rabbitmq-mensageria:
-    image: rabbitmq:management
+    build: .
     container_name: rabbitmq-mensageria
+    environment:
+      RABBIT_DEFINITIONS: rabbit_definitions.json
     ports:
       - "15672:15672"
       - "5672:5672"

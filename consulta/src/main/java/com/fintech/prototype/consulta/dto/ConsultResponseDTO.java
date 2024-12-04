@@ -1,11 +1,9 @@
-package com.fintech.prototype.gateway.dto;
+package com.fintech.prototype.consulta.dto;
 
+import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Builder
 @Data
 public class ConsultResponseDTO {
 
