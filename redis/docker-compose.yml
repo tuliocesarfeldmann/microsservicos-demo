@@ -1,0 +1,6 @@
+services:
+  redis-service:
+    build: .
+    container_name: redis-service
+    ports:
+      - "6379:6379"

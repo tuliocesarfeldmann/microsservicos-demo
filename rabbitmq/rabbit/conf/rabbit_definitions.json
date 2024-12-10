@@ -64,11 +64,31 @@
          "arguments":{
             "x-queue-type":"classic"
          }
+      },
+	  {
+         "name":"queue-cash-withdrawal-rabbit",
+         "vhost":"/",
+         "durable":true,
+         "auto_delete":false,
+         "arguments":{
+            "x-queue-type":"classic"
+         }
       }
    ],
    "exchanges":[
       {
          "name":"exchange-consult-rabbit",
+         "vhost":"/",
+         "type":"direct",
+         "durable":true,
+         "auto_delete":false,
+         "internal":false,
+         "arguments":{
+            
+         }
+      },
+	  {
+         "name":"exchange-cash-withdrawal-rabbit",
          "vhost":"/",
          "type":"direct",
          "durable":true,
@@ -84,6 +104,16 @@
          "source":"exchange-consult-rabbit",
          "vhost":"/",
          "destination":"queue-consult-rabbit",
+         "destination_type":"queue",
+         "routing_key":"",
+         "arguments":{
+            
+         }
+      },
+	  {
+         "source":"exchange-cash-withdrawal-rabbit",
+         "vhost":"/",
+         "destination":"queue-cash-withdrawal-rabbit",
          "destination_type":"queue",
          "routing_key":"",
          "arguments":{

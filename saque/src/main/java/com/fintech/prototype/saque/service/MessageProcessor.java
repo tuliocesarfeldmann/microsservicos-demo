@@ -1,16 +1,14 @@
-package com.fintech.prototype.consulta.service;
+package com.fintech.prototype.saque.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fintech.prototype.consulta.dto.CommomDataDTO;
-import com.fintech.prototype.consulta.dto.ConsultRequestDTO;
-import com.fintech.prototype.consulta.dto.ConsultResponseDTO;
-import com.fintech.prototype.consulta.dto.ErrorResponseDTO;
-import com.fintech.prototype.consulta.repository.RedisRepository;
+import com.fintech.prototype.saque.dto.CashWithdrawalRequestDTO;
+import com.fintech.prototype.saque.dto.CashWithdrawalResponseDTO;
+import com.fintech.prototype.saque.dto.ErrorResponseDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.core.Message;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -27,17 +25,14 @@ public class MessageProcessor {
 
     private final ObjectMapper objectMapper;
 
-    private final RedisRepository redisRepository;
-
     public MessageProcessor(RabbitTemplate rabbitTemplate,
-                            ObjectMapper objectMapper, RedisRepository redisRepository) {
+                            ObjectMapper objectMapper) {
         this.rabbitTemplate = rabbitTemplate;
         this.objectMapper = objectMapper;
-        this.redisRepository = redisRepository;
     }
 
     @RabbitListener(queues = SUBSCRIBE_QUEUE)
-    public void processMessage(Message message) {
+    public void processMessage(Message message) throws JsonProcessingException {
 
         String body = new String(message.getBody());
         Map<String, Object> requestHeaders = message.getMessageProperties().getHeaders();
@@ -46,17 +41,15 @@ public class MessageProcessor {
 
         try {
 
-            String identifier = (String) requestHeaders.get("IDENTIFIER");
+            log.info("Starting convert request body to ConsultRequestDTO... identifier: {}", requestHeaders.get("IDENTIFIER"));
 
-            log.info("Starting convert request body to ConsultRequestDTO... identifier: {}", identifier);
+            CashWithdrawalRequestDTO consultRequest = objectMapper.readValue(body, CashWithdrawalRequestDTO.class);
 
-            ConsultRequestDTO consultRequest = objectMapper.readValue(body, ConsultRequestDTO.class);
+            log.info("Starting consult processing... identifier: {}", requestHeaders.get("IDENTIFIER"));
 
-            log.info("Starting consult processing... identifier: {}", identifier);
+            CashWithdrawalResponseDTO response = process(consultRequest);
 
-            ConsultResponseDTO response = process(consultRequest, identifier);
-
-            log.info("Starting response processing... identifier: {}", identifier);
+            log.info("Starting response processing... identifier: {}", requestHeaders.get("IDENTIFIER"));
 
             sentResponse(requestHeaders, response);
 
@@ -66,7 +59,7 @@ public class MessageProcessor {
 
     }
 
-    private void sentResponse(Map<String, Object> requestHeaders, ConsultResponseDTO response) {
+    private void sentResponse(Map<String, Object> requestHeaders, CashWithdrawalResponseDTO response) {
 
         sentRabbimq(requestHeaders, response);
 
@@ -74,7 +67,7 @@ public class MessageProcessor {
 
     private void handleException(Exception e, Map<String, Object> headers) {
 
-        log.error("Ocorreu um erro não esperado. identifier: {} | error: {}", headers.get("IDENTIFIER"), e.toString());
+        log.error("Ocorreu um erro não esperado. identifier: {} | message: {}", headers.get("IDENTIFIER"), e.getMessage());
 
         ErrorResponseDTO errorResponse = ErrorResponseDTO.builder()
                 .error("ERROR INTERNO")
@@ -102,25 +95,10 @@ public class MessageProcessor {
         }
     }
 
-    private ConsultResponseDTO process(ConsultRequestDTO request, String identifier) {
+    private CashWithdrawalResponseDTO process(CashWithdrawalRequestDTO request) {
 
-        ConsultResponseDTO response = ConsultResponseDTO.builder()
-                .name("Teste")
-                .document("03900000000")
+        return CashWithdrawalResponseDTO.builder()
+                .status("OK")
                 .build();
-
-        CommomDataDTO commomData = CommomDataDTO.builder()
-                .identifier(identifier)
-                .agency(request.getAgency())
-                .account(request.getAccount())
-                .name(response.getName())
-                .document(response.getDocument())
-                .build();
-
-        log.info("Starting saving redis... identifier: {}", identifier);
-
-        redisRepository.save(commomData);
-
-        return response;
     }
 }
