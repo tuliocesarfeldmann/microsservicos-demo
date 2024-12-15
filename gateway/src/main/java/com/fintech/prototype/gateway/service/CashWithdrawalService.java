@@ -28,9 +28,9 @@ public class CashWithdrawalService {
 
     private final String REPLY_QUEUE = "reply-cash-withdrawal-rabbit";
 
-    private final Integer TTL = 20000;
+    private final Integer TTL = 40000;
 
-    public CashWithdrawalResponseDTO cashWithdrawalSend(CashWithdrawalRequestDTO cashWithdrawal, String identifier) throws JsonProcessingException {
+    public CashWithdrawalResponseDTO cashWithdrawalSend(CashWithdrawalRequestDTO cashWithdrawal, String identifier) throws Exception {
 
         log.info("Sending cash withdrawal... | identifier: {}", identifier);
 
@@ -49,6 +49,11 @@ public class CashWithdrawalService {
             throw new RuntimeException("Timeout waiting for response on queue " + replyQueue);
         } else {
             String jsonResponse = response.toString();
+
+            if (jsonResponse.contains("error")) {
+                throw new Exception(jsonResponse);
+            }
+
             return objectMapper.readValue(jsonResponse, CashWithdrawalResponseDTO.class);
         }
     }

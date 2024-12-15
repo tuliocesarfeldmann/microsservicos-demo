@@ -32,7 +32,7 @@ public class CashWithdrawalController {
             log.error(e.toString());
             return ResponseEntity
                     .internalServerError()
-                    .body(e.toString());
+                    .body(e.getMessage());
         }
     }
 }

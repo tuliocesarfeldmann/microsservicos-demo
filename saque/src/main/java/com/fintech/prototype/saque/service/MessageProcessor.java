@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fintech.prototype.saque.dto.CashWithdrawalRequestDTO;
 import com.fintech.prototype.saque.dto.CashWithdrawalResponseDTO;
+import com.fintech.prototype.saque.dto.CommomDataDTO;
 import com.fintech.prototype.saque.dto.ErrorResponseDTO;
+import com.fintech.prototype.saque.repository.RedisRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -12,23 +14,27 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class MessageProcessor {
 
-    private final String SUBSCRIBE_QUEUE = "queue-consult-rabbit";
+    private final String SUBSCRIBE_QUEUE = "queue-cash-withdrawal-rabbit";
 
-    private final String RESPONSE_EXCHANGE = "reply-consult-rabbit";
+    private final String RESPONSE_EXCHANGE = "reply-cash-withdrawal-rabbit";
 
     private final RabbitTemplate rabbitTemplate;
 
     private final ObjectMapper objectMapper;
 
+    private final RedisRepository redisRepository;
+
     public MessageProcessor(RabbitTemplate rabbitTemplate,
-                            ObjectMapper objectMapper) {
+                            ObjectMapper objectMapper, RedisRepository redisRepository) {
         this.rabbitTemplate = rabbitTemplate;
         this.objectMapper = objectMapper;
+        this.redisRepository = redisRepository;
     }
 
     @RabbitListener(queues = SUBSCRIBE_QUEUE)
@@ -41,15 +47,17 @@ public class MessageProcessor {
 
         try {
 
-            log.info("Starting convert request body to ConsultRequestDTO... identifier: {}", requestHeaders.get("IDENTIFIER"));
+            String identifier = (String) requestHeaders.get("IDENTIFIER");
+
+            log.info("Starting convert request body to ConsultRequestDTO... identifier: {}", identifier);
 
             CashWithdrawalRequestDTO consultRequest = objectMapper.readValue(body, CashWithdrawalRequestDTO.class);
 
-            log.info("Starting consult processing... identifier: {}", requestHeaders.get("IDENTIFIER"));
+            log.info("Starting consult processing... identifier: {}", identifier);
 
-            CashWithdrawalResponseDTO response = process(consultRequest);
+            CashWithdrawalResponseDTO response = process(consultRequest, identifier);
 
-            log.info("Starting response processing... identifier: {}", requestHeaders.get("IDENTIFIER"));
+            log.info("Starting response processing... identifier: {}", identifier);
 
             sentResponse(requestHeaders, response);
 
@@ -95,7 +103,21 @@ public class MessageProcessor {
         }
     }
 
-    private CashWithdrawalResponseDTO process(CashWithdrawalRequestDTO request) {
+    private CashWithdrawalResponseDTO process(CashWithdrawalRequestDTO request, String identifier) throws Exception {
+
+        Optional<CommomDataDTO> cacheData = redisRepository.findById(identifier);
+
+        if (cacheData.isEmpty()) {
+            throw new Exception("Cache data not found for identifier: " + identifier);
+        }
+
+        log.info("Found consult by identifier: {} | body: {}", identifier, objectMapper.writeValueAsString(cacheData.get()));
+
+        cacheData.get().setAmount(request.getAmount());
+        cacheData.get().setPassword(request.getPassword());
+
+        // Após ter os dados das duas requisições (consulta + saque) faria o processamento da transação...
+        // efetivarTransacao(cacheData);
 
         return CashWithdrawalResponseDTO.builder()
                 .status("OK")

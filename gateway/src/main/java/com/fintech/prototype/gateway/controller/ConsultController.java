@@ -33,7 +33,7 @@ public class ConsultController {
             log.error(e.toString());
             return ResponseEntity
                     .internalServerError()
-                    .body(e.toString());
+                    .body(e.getMessage());
         }
     }
 }
