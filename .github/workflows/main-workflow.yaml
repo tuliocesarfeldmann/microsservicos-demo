@@ -1,0 +1,67 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Determine Changed Services
+        id: changes
+        run: |
+          echo "Detectando serviços alterados..."
+          CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD | cut -d'/' -f1 | sort | uniq)
+          echo "Diretórios alterados: $CHANGED_DIRS"
+          echo "::set-output name=changed_dirs::$CHANGED_DIRS"
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Image Consulta
+        if: contains(steps.changes.outputs.changed_dirs, 'consulta')
+        run: |
+          echo "🔨 Building and pushing image for consulta"
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/consulta:latest ./consulta
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/consulta:latest
+
+      - name: Build and Push Image Saque
+        if: contains(steps.changes.outputs.changed_dirs, 'saque')
+        run: |
+          echo "🔨 Building and pushing image for saque"
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/saque:latest ./saque
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/saque:latest
+
+      - name: Build and Push Image Gateway
+        if: contains(steps.changes.outputs.changed_dirs, 'gateway')
+        run: |
+          echo "🔨 Building and pushing image for gateway"
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/gateway:latest ./gateway
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/gateway:latest
+
+      - name: Build and Push Image Redis
+        if: contains(steps.changes.outputs.changed_dirs, 'redis')
+        run: |
+          echo "🔨 Building and pushing image for redis"
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/redis:latest ./redis
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/redis:latest
+
+      - name: Build and Push Image Rabbimq
+        if: contains(steps.changes.outputs.changed_dirs, 'rabbitmq')
+        run: |
+          echo "🔨 Building and pushing image for rabbitmq"
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/rabbitmq:latest ./rabbitmq
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/rabbitmq:latest
