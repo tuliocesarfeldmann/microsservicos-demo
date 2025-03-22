@@ -120,7 +120,7 @@ jobs:
       - name: Build and Push
         run: |
           cd ./consulta
-          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
           docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:consulta-$VERSION .
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:consulta-$VERSION
 
@@ -148,7 +148,7 @@ jobs:
       - name: Build and Push
         run: |
           cd ./saque
-          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
           docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:saque-$VERSION .
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:saque-$VERSION
 
@@ -176,7 +176,7 @@ jobs:
       - name: Build and Push
         run: |
           cd ./gateway
-          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
           docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:gateway-$VERSION .
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:gateway-$VERSION
 
