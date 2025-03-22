@@ -48,6 +48,12 @@ jobs:
           cd ./consulta
           mvn clean package -DskipTests
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: consulta-jar-file-${{ env.PROJECT_VERSION }}
+          path: target/consulta-jar-file-${{ env.PROJECT_VERSION }}.jar
+
   compile-saque:
     name: Compile Saque
     runs-on: ubuntu-latest
@@ -62,6 +68,12 @@ jobs:
         run: |
           cd ./saque
           mvn clean package -DskipTests
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: saque-jar-file-${{ env.PROJECT_VERSION }}
+          path: target/saque-jar-file-${{ env.PROJECT_VERSION }}.jar
 
   compile-gateway:
     name: Compile Gateway
@@ -78,6 +90,12 @@ jobs:
           cd ./gateway
           mvn clean package -DskipTests
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: gateway-jar-file-${{ env.PROJECT_VERSION }}
+          path: target/gateway-jar-file-${{ env.PROJECT_VERSION }}.jar
+
   build-and-push-consulta:
     name: Build and Push Consulta
     runs-on: ubuntu-latest
@@ -86,6 +104,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: consulta-jar-file-${{ env.PROJECT_VERSION }}
+          path: target
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -109,6 +133,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: saque-jar-file-${{ env.PROJECT_VERSION }}
+          path: target
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -130,6 +160,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: gateway-jar-file-${{ env.PROJECT_VERSION }}
+          path: target
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
