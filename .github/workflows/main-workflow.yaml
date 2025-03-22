@@ -121,8 +121,8 @@ jobs:
         run: |
           cd ./consulta
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/consulta:$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/consulta:$VERSION
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:consulta-$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:consulta-$VERSION
 
   build-and-push-saque:
     name: Build and Push Saque
@@ -149,8 +149,8 @@ jobs:
         run: |
           cd ./saque
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/saque:$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/saque:$VERSION
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:saque-$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:saque-$VERSION
 
   build-and-push-gateway:
     name: Build and Push Gateway
@@ -177,8 +177,8 @@ jobs:
         run: |
           cd ./gateway
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/gateway:$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/gateway:$VERSION
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:gateway-$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:gateway-$VERSION
 
   build-and-push-redis:
     name: Build and Push Redis
@@ -200,8 +200,8 @@ jobs:
         run: |
           cd ./redis
           VERSION=$(cat version || echo "latest")
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/redis:$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/redis:$VERSION
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:redis-$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:redis-$VERSION
 
   build-and-push-rabbitmq:
     name: Build and Push RabbitMQ
@@ -223,5 +223,5 @@ jobs:
         run: |
           cd ./rabbitmq
           VERSION=$(cat version || echo "latest")
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/rabbitmq:$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/rabbitmq:$VERSION
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:rabbitmq-$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:rabbitmq-$VERSION
