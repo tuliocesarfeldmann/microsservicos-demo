@@ -29,9 +29,9 @@ jobs:
             CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD | cut -d'/' -f1 | sort | uniq)
           fi
           echo "Diretórios alterados: $CHANGED_DIRS"
-          CHANGED_DIRS_CSV=$(echo "$CHANGED_DIRS" | paste -sd "," -)
-          echo "Diretórios alterados (CSV): $CHANGED_DIRS_CSV"
-          echo "changed_dirs=$CHANGED_DIRS_CSV" >> $GITHUB_OUTPUT
+          CHANGED_DIRS_CONCAT=$(echo "$CHANGED_DIRS" | paste -sd "," -)
+          echo "Diretórios alterados (CSV): $CHANGED_DIRS_CONCAT"
+          echo "changed_dirs=$CHANGED_DIRS_CONCAT" >> $GITHUB_OUTPUT
 
   compile-consulta:
     name: Compile Consulta
@@ -111,18 +111,24 @@ jobs:
           name: consulta-jar-file
           path: ./consulta/target
 
+      - name: Set VERSION
+        id: version
+        run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')" >> $GITHUB_ENV
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Build and Push
-        run: |
-          cd ./consulta
-          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:consulta-$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:consulta-$VERSION
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./consulta
+          push: true
+          file: ./consulta/Dockerfile
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:consulta-${{ env.VERSION }}
 
   build-and-push-saque:
     name: Build and Push Saque
@@ -139,18 +145,24 @@ jobs:
           name: saque-jar-file
           path: ./saque/target
 
+      - name: Set VERSION
+        id: version
+        run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')" >> $GITHUB_ENV
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Build and Push
-        run: |
-          cd ./saque
-          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:saque-$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:saque-$VERSION
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./saque
+          push: true
+          file: ./saque/Dockerfile
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:saque-${{ env.VERSION }}
 
   build-and-push-gateway:
     name: Build and Push Gateway
@@ -167,18 +179,24 @@ jobs:
           name: gateway-jar-file
           path: ./gateway/target
 
+      - name: Set VERSION
+        id: version
+        run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')" >> $GITHUB_ENV
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Build and Push
-        run: |
-          cd ./gateway
-          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:gateway-$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:gateway-$VERSION
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./gateway
+          push: true
+          file: ./gateway/Dockerfile
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:gateway-${{ env.VERSION }}
 
   build-and-push-redis:
     name: Build and Push Redis
@@ -190,18 +208,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set VERSION
+        id: version
+        run: echo "VERSION=$(cat version)" >> $GITHUB_ENV
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Build and Push
-        run: |
-          cd ./redis
-          VERSION=$(cat version || echo "latest")
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:redis-$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:redis-$VERSION
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./redis
+          push: true
+          file: ./redis/Dockerfile
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:redis-${{ env.VERSION }}
 
   build-and-push-rabbitmq:
     name: Build and Push RabbitMQ
@@ -213,15 +237,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set VERSION
+        id: version
+        run: echo "VERSION=$(cat version)" >> $GITHUB_ENV
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Build and Push
-        run: |
-          cd ./rabbitmq
-          VERSION=$(cat version || echo "latest")
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:rabbitmq-$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:rabbitmq-$VERSION
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./rabbitmq
+          push: true
+          file: ./rabbitmq/Dockerfile
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo:rabbitmq-${{ env.VERSION }}
