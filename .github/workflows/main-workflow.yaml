@@ -1,4 +1,4 @@
-name: Docker Build and Push
+name: Actions
 
 on:
   push:
@@ -6,62 +6,112 @@ on:
       - main
 
 jobs:
-  build-and-push:
-    name: Build and Push Docker Images
+  detect-changes:
+    name: Detect Changes
     runs-on: ubuntu-latest
-    env:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
-      
+
+    outputs:
+      changed_dirs: ${{ steps.detect.outputs.changed_dirs }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Determine Changed Services
-        id: changes
+      - name: Detect Changed Directories
+        id: detect
         run: |
-          echo "Detectando serviços alterados..."
-          CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD | cut -d'/' -f1 | sort | uniq)
+          echo "🔍 Detectando serviços alterados..."
+          if [ $(git rev-list --count HEAD) -eq 1 ]; then
+            echo "⚠️ Apenas um commit encontrado. Listando todos os arquivos..."
+            CHANGED_DIRS=$(git ls-files | cut -d'/' -f1 | sort | uniq)
+          else
+            echo "🔍 Múltiplos commits encontrados. Comparando últimas revisões..."
+            CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD | cut -d'/' -f1 | sort | uniq)
+          fi
           echo "Diretórios alterados: $CHANGED_DIRS"
           echo "::set-output name=changed_dirs::$CHANGED_DIRS"
+
+  compile:
+    name: Compile Projects
+    runs-on: ubuntu-latest
+    needs: detect-changes
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Compile Spring Boot Projects
+        if: contains(needs.detect-changes.outputs.changed_dirs, 'consulta')
+        run: |
+          echo "🔨 Compilando consulta"
+          cd ./consulta
+          mvn clean package -DskipTests
+
+      - name: Compile Spring Boot Projects
+        if: contains(needs.detect-changes.outputs.changed_dirs, 'saque')
+        run: |
+          echo "🔨 Compilando saque"
+          cd ./saque
+          mvn clean package -DskipTests
+
+      - name: Compile Spring Boot Projects
+        if: contains(needs.detect-changes.outputs.changed_dirs, 'gateway')
+        run: |
+          echo "🔨 Compilando gateway"
+          cd ./gateway
+          mvn clean package -DskipTests
+
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    needs: compile
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ env.DOCKERHUB_TOKEN }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Build and Push Image Consulta
-        if: contains(steps.changes.outputs.changed_dirs, 'consulta')
+      - name: Build and Push - Consulta
+        if: contains(needs.detect-changes.outputs.changed_dirs, 'consulta')
         run: |
-          echo "🔨 Building and pushing image for consulta"
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/consulta:latest ./consulta
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/consulta:latest
+          cd ./consulta
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/consulta:$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/consulta:$VERSION
 
-      - name: Build and Push Image Saque
-        if: contains(steps.changes.outputs.changed_dirs, 'saque')
+      - name: Build and Push - Saque
+        if: contains(needs.detect-changes.outputs.changed_dirs, 'saque')
         run: |
-          echo "🔨 Building and pushing image for saque"
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/saque:latest ./saque
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/saque:latest
+          cd ./saque
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/saque:$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/saque:$VERSION
 
-      - name: Build and Push Image Gateway
-        if: contains(steps.changes.outputs.changed_dirs, 'gateway')
+      - name: Build and Push - Gateway
+        if: contains(needs.detect-changes.outputs.changed_dirs, 'gateway')
         run: |
-          echo "🔨 Building and pushing image for gateway"
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/gateway:latest ./gateway
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/gateway:latest
+          cd ./gateway
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/gateway:$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/gateway:$VERSION
 
-      - name: Build and Push Image Redis
-        if: contains(steps.changes.outputs.changed_dirs, 'redis')
+      - name: Build and Push - Redis
+        if: contains(needs.detect-changes.outputs.changed_dirs, 'redis')
         run: |
-          echo "🔨 Building and pushing image for redis"
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/redis:latest ./redis
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/redis:latest
+          cd ./redis
+          VERSION=$(cat version || echo "latest")
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/redis:$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/redis:$VERSION
 
-      - name: Build and Push Image Rabbimq
-        if: contains(steps.changes.outputs.changed_dirs, 'rabbitmq')
+      - name: Build and Push - RabbitMQ
+        if: contains(needs.detect-changes.outputs.changed_dirs, 'rabbitmq')
         run: |
-          echo "🔨 Building and pushing image for rabbitmq"
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/rabbitmq:latest ./rabbitmq
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/rabbitmq:latest
+          cd ./rabbitmq
+          VERSION=$(cat version || echo "latest")
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/rabbitmq:$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/rabbitmq:$VERSION
