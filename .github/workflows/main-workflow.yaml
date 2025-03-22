@@ -31,40 +31,55 @@ jobs:
           echo "Diretórios alterados: $CHANGED_DIRS"
           echo "::set-output name=changed_dirs::$CHANGED_DIRS"
 
-  compile:
-    name: Compile Projects
+  compile-consulta:
+    name: Compile Consulta
     runs-on: ubuntu-latest
     needs: detect-changes
+    if: contains(needs.detect-changes.outputs.changed_dirs, 'consulta')
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Compile Spring Boot Projects
-        if: contains(needs.detect-changes.outputs.changed_dirs, 'consulta')
+      - name: Compile
         run: |
-          echo "🔨 Compilando consulta"
           cd ./consulta
           mvn clean package -DskipTests
 
-      - name: Compile Spring Boot Projects
-        if: contains(needs.detect-changes.outputs.changed_dirs, 'saque')
+  compile-saque:
+    name: Compile Saque
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: contains(needs.detect-changes.outputs.changed_dirs, 'saque')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Compile
         run: |
-          echo "🔨 Compilando saque"
           cd ./saque
           mvn clean package -DskipTests
 
-      - name: Compile Spring Boot Projects
-        if: contains(needs.detect-changes.outputs.changed_dirs, 'gateway')
+  compile-gateway:
+    name: Compile Gateway
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: contains(needs.detect-changes.outputs.changed_dirs, 'gateway')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Compile
         run: |
-          echo "🔨 Compilando gateway"
           cd ./gateway
           mvn clean package -DskipTests
 
-  build-and-push:
-    name: Build and Push Images
+  build-and-push-consulta:
+    name: Build and Push Consulta
     runs-on: ubuntu-latest
-    needs: compile
+    needs: compile-consulta
 
     steps:
       - name: Checkout code
@@ -76,42 +91,99 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Build and Push - Consulta
-        if: contains(needs.detect-changes.outputs.changed_dirs, 'consulta')
+      - name: Build and Push
         run: |
           cd ./consulta
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/consulta:$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/consulta:$VERSION
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/consulta:$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/consulta:$VERSION
 
-      - name: Build and Push - Saque
-        if: contains(needs.detect-changes.outputs.changed_dirs, 'saque')
+  build-and-push-saque:
+    name: Build and Push Saque
+    runs-on: ubuntu-latest
+    needs: compile-saque
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build and Push
         run: |
           cd ./saque
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/saque:$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/saque:$VERSION
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/saque:$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/saque:$VERSION
 
-      - name: Build and Push - Gateway
-        if: contains(needs.detect-changes.outputs.changed_dirs, 'gateway')
+  build-and-push-gateway:
+    name: Build and Push Gateway
+    runs-on: ubuntu-latest
+    needs: compile-gateway
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build and Push
         run: |
           cd ./gateway
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/gateway:$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/gateway:$VERSION
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/gateway:$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/gateway:$VERSION
 
-      - name: Build and Push - Redis
-        if: contains(needs.detect-changes.outputs.changed_dirs, 'redis')
+  build-and-push-redis:
+    name: Build and Push Redis
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: contains(needs.detect-changes.outputs.changed_dirs, 'redis')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build and Push
         run: |
           cd ./redis
           VERSION=$(cat version || echo "latest")
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/redis:$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/redis:$VERSION
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/redis:$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/redis:$VERSION
 
-      - name: Build and Push - RabbitMQ
-        if: contains(needs.detect-changes.outputs.changed_dirs, 'rabbitmq')
+  build-and-push-rabbitmq:
+    name: Build and Push RabbitMQ
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: contains(needs.detect-changes.outputs.changed_dirs, 'rabbitmq')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build and Push
         run: |
           cd ./rabbitmq
           VERSION=$(cat version || echo "latest")
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/rabbitmq:$VERSION .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/rabbitmq:$VERSION
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/rabbitmq:$VERSION .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-microsservicos-financeiro-demo/rabbitmq:$VERSION

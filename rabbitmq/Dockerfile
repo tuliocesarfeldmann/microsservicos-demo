@@ -9,4 +9,3 @@ ADD /rabbit/conf/rabbitmq.conf /etc/rabbitmq/rabbitmq.conf
 ADD /rabbit/conf/rabbit_definitions.json /etc/rabbitmq/rabbit_definitions.json
 
 CMD ["rabbitmq-server"]
-
