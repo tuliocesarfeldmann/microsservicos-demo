@@ -52,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: consulta-jar-file
-          path: target/*.jar
+          path: ./consulta/target/*.jar
 
   compile-saque:
     name: Compile Saque
@@ -73,7 +73,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: saque-jar-file
-          path: target/*.jar
+          path: ./saque/target/*.jar
 
   compile-gateway:
     name: Compile Gateway
@@ -94,7 +94,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: gateway-jar-file
-          path: target/*.jar
+          path: ./gateway/target/*.jar
 
   build-and-push-consulta:
     name: Build and Push Consulta
@@ -109,7 +109,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: consulta-jar-file
-          path: target
+          path: ./consulta/target
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -137,7 +137,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: saque-jar-file
-          path: target
+          path: ./saque/target
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -165,7 +165,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: gateway-jar-file
-          path: target
+          path: ./gateway/target
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
