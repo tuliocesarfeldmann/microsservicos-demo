@@ -20,16 +20,18 @@ jobs:
       - name: Detect Changed Directories
         id: detect
         run: |
-          echo "🔍 Detectando serviços alterados..."
+          echo "Detectando serviços alterados..."
           if [ $(git rev-list --count HEAD) -eq 1 ]; then
             echo "⚠️ Apenas um commit encontrado. Listando todos os arquivos..."
             CHANGED_DIRS=$(git ls-files | cut -d'/' -f1 | sort | uniq)
           else
-            echo "🔍 Múltiplos commits encontrados. Comparando últimas revisões..."
+            echo "Comparando últimas revisões..."
             CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD | cut -d'/' -f1 | sort | uniq)
           fi
           echo "Diretórios alterados: $CHANGED_DIRS"
-          echo "::set-output name=changed_dirs::$CHANGED_DIRS"
+          CHANGED_DIRS_CSV=$(echo "$CHANGED_DIRS" | paste -sd "," -)
+          echo "Diretórios alterados (CSV): $CHANGED_DIRS_CSV"
+          echo "changed_dirs=$CHANGED_DIRS_CSV" >> $GITHUB_OUTPUT
 
   compile-consulta:
     name: Compile Consulta
