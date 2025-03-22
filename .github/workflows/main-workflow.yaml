@@ -52,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: consulta-jar-file
-          path: target/consulta-jar-file.jar
+          path: target/*.jar
 
   compile-saque:
     name: Compile Saque
@@ -73,7 +73,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: saque-jar-file
-          path: target/saque-jar-file.jar
+          path: target/*.jar
 
   compile-gateway:
     name: Compile Gateway
@@ -94,7 +94,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: gateway-jar-file
-          path: target/gateway-jar-file.jar
+          path: target/*.jar
 
   build-and-push-consulta:
     name: Build and Push Consulta
