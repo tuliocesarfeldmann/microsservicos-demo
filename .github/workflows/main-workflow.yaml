@@ -51,8 +51,8 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: consulta-jar-file-${{ env.PROJECT_VERSION }}
-          path: target/consulta-jar-file-${{ env.PROJECT_VERSION }}.jar
+          name: consulta-jar-file
+          path: target/consulta-jar-file.jar
 
   compile-saque:
     name: Compile Saque
@@ -72,8 +72,8 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: saque-jar-file-${{ env.PROJECT_VERSION }}
-          path: target/saque-jar-file-${{ env.PROJECT_VERSION }}.jar
+          name: saque-jar-file
+          path: target/saque-jar-file.jar
 
   compile-gateway:
     name: Compile Gateway
@@ -93,8 +93,8 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: gateway-jar-file-${{ env.PROJECT_VERSION }}
-          path: target/gateway-jar-file-${{ env.PROJECT_VERSION }}.jar
+          name: gateway-jar-file
+          path: target/gateway-jar-file.jar
 
   build-and-push-consulta:
     name: Build and Push Consulta
@@ -108,7 +108,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: consulta-jar-file-${{ env.PROJECT_VERSION }}
+          name: consulta-jar-file
           path: target
 
       - name: Log in to Docker Hub
@@ -136,7 +136,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: saque-jar-file-${{ env.PROJECT_VERSION }}
+          name: saque-jar-file
           path: target
 
       - name: Log in to Docker Hub
@@ -164,7 +164,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: gateway-jar-file-${{ env.PROJECT_VERSION }}
+          name: gateway-jar-file
           path: target
 
       - name: Log in to Docker Hub
