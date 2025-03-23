@@ -102,7 +102,7 @@ jobs:
     needs: compile-consulta
 
     outputs:
-      changed_dirs: ${{ steps.version.outputs.version }}
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Checkout code
@@ -143,7 +143,7 @@ jobs:
     needs: compile-saque
 
     outputs:
-      changed_dirs: ${{ steps.version.outputs.version }}
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Checkout code
@@ -184,7 +184,7 @@ jobs:
     needs: compile-gateway
 
     outputs:
-      changed_dirs: ${{ steps.version.outputs.version }}
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Checkout code
@@ -226,7 +226,7 @@ jobs:
     if: contains(needs.detect-changes.outputs.changed_dirs, 'redis')
 
     outputs:
-      changed_dirs: ${{ steps.version.outputs.version }}
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Checkout code
@@ -262,7 +262,7 @@ jobs:
     if: contains(needs.detect-changes.outputs.changed_dirs, 'rabbitmq')
 
     outputs:
-      changed_dirs: ${{ steps.version.outputs.version }}
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Checkout code
