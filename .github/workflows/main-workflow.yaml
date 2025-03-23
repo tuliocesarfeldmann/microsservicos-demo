@@ -291,8 +291,7 @@ jobs:
               sed -i "s|image: .*/${SERVICE}:.*|image: ${{ secrets.DOCKER_HUB_USERNAME }}/microsservicos-financeiro-demo:${SERVICE}-${{ env.VERSION }}|" docker-compose.yml
             fi
           done
-          git status
-          git diff
+          echo "TESTE!!!!" >> docker-compose.yml
 
       - name: Commit and Push Changes
         run: |
