@@ -291,11 +291,10 @@ jobs:
             sed -i "s|image: .*${SERVICE}:.*|image: ${{ secrets.DOCKER_HUB_USERNAME }}/microsservicos-financeiro-demo:${SERVICE}-${{ env.VERSION }}|" docker-compose.yml
           fi
         done
-        git diff
-        git status
 
     - name: Commit and Push Changes
       run: |
+        cd ./swarm-devops-tgsi
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         git add .
