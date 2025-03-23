@@ -101,6 +101,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: compile-consulta
 
+    outputs:
+      changed_dirs: ${{ steps.version.outputs.version }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -118,8 +121,6 @@ jobs:
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "version_test=$VERSION" >> $GITHUB_OUTPUT
-          echo $VERSION
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -140,6 +141,9 @@ jobs:
     name: Build and Push Saque
     runs-on: ubuntu-latest
     needs: compile-saque
+
+    outputs:
+      changed_dirs: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Checkout code
@@ -178,6 +182,9 @@ jobs:
     name: Build and Push Gateway
     runs-on: ubuntu-latest
     needs: compile-gateway
+
+    outputs:
+      changed_dirs: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Checkout code
@@ -218,6 +225,9 @@ jobs:
     needs: detect-changes
     if: contains(needs.detect-changes.outputs.changed_dirs, 'redis')
 
+    outputs:
+      changed_dirs: ${{ steps.version.outputs.version }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -250,6 +260,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: detect-changes
     if: contains(needs.detect-changes.outputs.changed_dirs, 'rabbitmq')
+
+    outputs:
+      changed_dirs: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Checkout code
@@ -297,33 +310,15 @@ jobs:
       - name: Update docker-compose.yml
         run: |
           cd ./swarm-devops-tgsi/devops-tgsi-swarm
-          echo ${{ needs.build-and-push-consulta.outputs.version }}
-          echo "${{ needs.build-and-push-consulta.outputs.version_test }}"
-          if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"consulta"* ]]; then
-            echo "Atualizando imagem do consulta para ${{ needs.build-and-push-consulta.outputs.version }}..."
-            sed -i "s|image: .*consulta-.*|image: tulioufsm/microsservicos-financeiro-demo:consulta-${{ needs.build-and-push-consulta.outputs.version }}|g" docker-compose.yml
-          fi
+          services=("consulta" "saque" "gateway" "redis" "rabbitmq")
 
-          if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"saque"* ]]; then
-            echo "Atualizando imagem do saque para ${{ needs.build-and-push-saque.outputs.version }}..."
-            sed -i "s|image: .*saque-.*|image: tulioufsm/microsservicos-financeiro-demo:saque-${{ needs.build-and-push-saque.outputs.version }}|g" docker-compose.yml
-          fi
-
-          if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"gateway"* ]]; then
-            echo "Atualizando imagem do gateway para ${{ needs.build-and-push-gateway.outputs.version }}..."
-            sed -i "s|image: .*gateway-.*|image: tulioufsm/microsservicos-financeiro-demo:gateway-${{ needs.build-and-push-gateway.outputs.version }}|g" docker-compose.yml
-          fi
-
-          # Redis e RabbitMQ
-          if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"redis"* ]]; then
-            echo "Atualizando imagem do redis para ${{ needs.build-and-push-redis.outputs.version }}..."
-            sed -i "s|image: .*redis-.*|image: tulioufsm/microsservicos-financeiro-demo:redis-${{ needs.build-and-push-redis.outputs.version }}|g" docker-compose.yml
-          fi
-
-          if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"rabbitmq"* ]]; then
-            echo "Atualizando imagem do rabbitmq para ${{ needs.build-and-push-rabbitmq.outputs.version }}..."
-            sed -i "s|image: .*rabbitmq-.*|image: tulioufsm/microsservicos-financeiro-demo:rabbitmq-${{ needs.build-and-push-rabbitmq.outputs.version }}|g" docker-compose.yml
-          fi
+          for service in "${services[@]}"; do
+            if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"$service"* ]]; then
+              version="${{ needs.build-and-push-${service}.outputs.version }}"
+              echo "Atualizando imagem do $service para $version..."
+              sed -i "s|image: .*${service}-.*|image: tulioufsm/microsservicos-financeiro-demo:${service}-${version}|g" docker-compose.yml
+            fi
+          done
 
       - name: Commit and Push Changes
         run: |
