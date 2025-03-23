@@ -269,7 +269,8 @@ jobs:
   update-env-repository:
     name: Update Enviroment Repository
     runs-on: ubuntu-latest
-    needs: 
+    needs:
+    - detect-changes
     - build-and-push-consulta
     - build-and-push-saque
     - build-and-push-gateway
