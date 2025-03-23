@@ -284,7 +284,7 @@ jobs:
 
     - name: Update docker-compose.yml
       run: |
-        cd ./devops-tgsi-swarm
+        cd ./swarm-devops-tgsi/devops-tgsi-swarm
         for SERVICE in consulta saque gateway redis rabbitmq; do
           if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"$SERVICE"* ]]; then
             echo "Atualizando imagem do $SERVICE..."
