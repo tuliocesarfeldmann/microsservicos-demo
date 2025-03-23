@@ -115,7 +115,9 @@ jobs:
         id: version
         run: |
           cd ./consulta
-          echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')" >> $GITHUB_ENV
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -151,7 +153,9 @@ jobs:
         id: version
         run: |
           cd ./saque
-          echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')" >> $GITHUB_ENV
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -187,7 +191,9 @@ jobs:
         id: version
         run: |
           cd ./gateway
-          echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')" >> $GITHUB_ENV
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -218,7 +224,9 @@ jobs:
         id: version
         run: |
           cd ./redis
-          echo "VERSION=$(cat version)" >> $GITHUB_ENV
+          VERSION=$(cat version)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -249,7 +257,9 @@ jobs:
         id: version
         run: |
           cd ./rabbitmq
-          echo "VERSION=$(cat version)" >> $GITHUB_ENV
+          VERSION=$(cat version)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -285,12 +295,31 @@ jobs:
       - name: Update docker-compose.yml
         run: |
           cd ./swarm-devops-tgsi/devops-tgsi-swarm
-          for SERVICE in consulta saque gateway redis rabbitmq; do
-            if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"$SERVICE"* ]]; then
-              echo "Atualizando imagem do $SERVICE para ${{ env.VERSION }}..."
-              sed -i "s|image: tulioufsm/sistema-microsservicos-financeiro:${SERVICE}-|image: tulioufsm/microsservicos-financeiro-demo:${SERVICE}-${{ env.VERSION }}|" docker-compose.yml
-            fi
-          done
+          if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"consulta"* ]]; then
+            echo "Atualizando imagem do consulta para ${{ needs.build-and-push-consulta.outputs.version }}..."
+            sed -i "s|image: .*consulta-.*|image: tulioufsm/microsservicos-financeiro-demo:consulta-${{ needs.build-and-push-consulta.outputs.version }}|g" docker-compose.yml
+          fi
+
+          if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"saque"* ]]; then
+            echo "Atualizando imagem do saque para ${{ needs.build-and-push-saque.outputs.version }}..."
+            sed -i "s|image: .*saque-.*|image: tulioufsm/microsservicos-financeiro-demo:saque-${{ needs.build-and-push-saque.outputs.version }}|g" docker-compose.yml
+          fi
+
+          if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"gateway"* ]]; then
+            echo "Atualizando imagem do gateway para ${{ needs.build-and-push-gateway.outputs.version }}..."
+            sed -i "s|image: .*gateway-.*|image: tulioufsm/microsservicos-financeiro-demo:gateway-${{ needs.build-and-push-gateway.outputs.version }}|g" docker-compose.yml
+          fi
+
+          # Redis e RabbitMQ
+          if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"redis"* ]]; then
+            echo "Atualizando imagem do redis para ${{ needs.build-and-push-redis.outputs.version }}..."
+            sed -i "s|image: .*redis-.*|image: tulioufsm/microsservicos-financeiro-demo:redis-${{ needs.build-and-push-redis.outputs.version }}|g" docker-compose.yml
+          fi
+
+          if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"rabbitmq"* ]]; then
+            echo "Atualizando imagem do rabbitmq para ${{ needs.build-and-push-rabbitmq.outputs.version }}..."
+            sed -i "s|image: .*rabbitmq-.*|image: tulioufsm/microsservicos-financeiro-demo:rabbitmq-${{ needs.build-and-push-rabbitmq.outputs.version }}|g" docker-compose.yml
+          fi
 
       - name: Commit and Push Changes
         run: |
