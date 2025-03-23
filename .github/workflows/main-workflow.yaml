@@ -288,7 +288,8 @@ jobs:
           for SERVICE in consulta saque gateway redis rabbitmq; do
             if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"$SERVICE"* ]]; then
               echo "Atualizando imagem do $SERVICE..."
-              sed -i "s|image: tulioufsm/sistema-microsservicos-financeiro:${SERVICE}-|image: tulioufsm/microsservicos-financeiro-demo:${SERVICE}-${{ env.VERSION }}|" docker-compose.yml            fi
+              sed -i "s|image: tulioufsm/sistema-microsservicos-financeiro:${SERVICE}-|image: tulioufsm/microsservicos-financeiro-demo:${SERVICE}-${{ env.VERSION }}|" docker-compose.yml
+            fi
           done
 
       - name: Commit and Push Changes
