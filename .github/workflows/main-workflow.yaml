@@ -296,8 +296,7 @@ jobs:
 
     - name: Commit and Push Changes
       run: |
-        echo "git status"
-        echo "git remote show origin"
+        git remote show origin
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         git add .
