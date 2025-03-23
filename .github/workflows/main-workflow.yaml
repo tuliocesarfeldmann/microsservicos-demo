@@ -287,6 +287,8 @@ jobs:
       run: |
         cd ./devops-tgsi-swarm
         for SERVICE in consulta saque gateway redis rabbitmq; do
+          echo "SERVICE --> $SERVICE"
+          echo "${{ needs.detect-changes.outputs.changed_dirs }} --> ${{ needs.detect-changes.outputs.changed_dirs }}" 
           if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"$SERVICE"* ]]; then
             echo "Atualizando imagem do $SERVICE..."
             sed -i "s|image: .*${SERVICE}:.*|image: ${{ secrets.DOCKER_HUB_USERNAME }}/microsservicos-financeiro-demo:${SERVICE}-${{ env.VERSION }}|" docker-compose.yml
