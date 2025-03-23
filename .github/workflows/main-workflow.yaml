@@ -118,6 +118,7 @@ jobs:
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_test=$VERSION" >> $GITHUB_OUTPUT
           echo $VERSION
 
       - name: Log in to Docker Hub
@@ -296,6 +297,8 @@ jobs:
       - name: Update docker-compose.yml
         run: |
           cd ./swarm-devops-tgsi/devops-tgsi-swarm
+          echo ${{ needs.build-and-push-consulta.outputs.version }}
+          echo ${{ needs.build-and-push-consulta.outputs.version_test }}
           if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"consulta"* ]]; then
             echo "Atualizando imagem do consulta para ${{ needs.build-and-push-consulta.outputs.version }}..."
             sed -i "s|image: .*consulta-.*|image: tulioufsm/microsservicos-financeiro-demo:consulta-${{ needs.build-and-push-consulta.outputs.version }}|g" docker-compose.yml
