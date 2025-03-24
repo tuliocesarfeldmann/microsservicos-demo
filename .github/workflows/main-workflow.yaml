@@ -309,7 +309,7 @@ jobs:
 
       - name: Update docker-compose.yml
         run: |
-          cd ./swarm-devops-tgsi/devops-tgsi-swarm
+          cd ./swarm-devops-tgsi/devops-tgsi
           if [[ "${{ needs.detect-changes.outputs.changed_dirs }}" == *"consulta"* ]]; then
             echo "Atualizando imagem do consulta para ${{ needs.build-and-push-consulta.outputs.version }}..."
             sed -i "s|image: .*consulta-.*|image: tulioufsm/microsservicos-financeiro-demo:consulta-${{ needs.build-and-push-consulta.outputs.version }}|g" docker-compose.yml
